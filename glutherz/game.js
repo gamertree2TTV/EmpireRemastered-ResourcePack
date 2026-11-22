@@ -170,7 +170,7 @@ function enhanceCost(it) { return { gold: Math.round(T_GOLD[it.tier] * 0.3 * (it
 function enhanceChance(it) { return Math.max(15, 100 - it.plus * 10); }
 
 // ---------------------------------------------------------------- Oberfläche
-let tab = 'adventure';
+let tab = 'adventure', confirmReset = false;
 const TABS = [['adventure', '⚔️ Abenteuer'], ['forge', '🔨 Schmiede'], ['inv', '🎒 Inventar'], ['char', '🧍 Charakter'], ['shop', '🧪 Händler']];
 
 function renderHud() {
@@ -436,7 +436,7 @@ function charHtml() {
       <div class="stat"><span>Leben</span><b>${st.hp}</b></div><div class="stat"><span>Kritische Treffer</span><b>${st.crit} %</b></div>
       <div class="stat"><span>Schläge pro Sekunde</span><b>${(1 / st.interval).toFixed(2)}</b></div>
       <div class="stat"><span>Lebensraub</span><b>${st.ls} %</b></div><div class="stat"><span>Doppelschlag</span><b>${st.dbl} %</b></div></div></div>
-    <div class="panel"><button class="small" data-act="reset">Spielstand löschen und neu beginnen</button></div>`;
+    <div class="panel"><button class="small" data-act="reset">${confirmReset ? 'Wirklich alles löschen? Zum Bestätigen noch einmal tippen' : 'Spielstand löschen und neu beginnen'}</button></div>`;
 }
 function potionPrice() { return 20 * S.zones; }
 function shopHtml() {
@@ -449,7 +449,7 @@ function shopHtml() {
 
 // ---------------------------------------------------------------- Aktionen
 const ACT = {
-  tab(a) { if (C && a !== 'adventure') leaveFight(); tab = a; },
+  tab(a) { if (C && a !== 'adventure') leaveFight(); tab = a; confirmReset = false; },
   fight(a) { startFight(+a, false); },
   boss(a) { if (S.kills[+a] >= BOSS_KILLS) startFight(+a, true); },
   leave() { leaveFight(); },
@@ -488,7 +488,7 @@ const ACT = {
   },
   attr(a) { if (S.pts > 0) { S[a]++; S.pts--; } },
   buy(a) { const n = +a, p = potionPrice() * n; if (S.gold >= p) { S.gold -= p; S.potions += n; } },
-  reset() { if (confirm('Wirklich den gesamten Spielstand löschen?')) { leaveFight(); F = null; lastForged = null; newGame(); tab = 'adventure'; } },
+  reset() { if (!confirmReset) { confirmReset = true; return; } confirmReset = false; leaveFight(); F = null; lastForged = null; newGame(); tab = 'adventure'; },
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
